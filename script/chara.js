@@ -173,6 +173,19 @@ class Item extends Character{
         return this.score;
     }
 
+    getY(){
+        return this.y;
+    }
+
+    setXmodify(arr){
+        for(let i=0; i < arr.length; i++){
+            if(this.score == -100 && Math.abs(this.x - arr[i])<20){
+                this.x = (Math.random() + 20) % 375;
+                i=0;
+            }
+        }
+    }
+
 }
 
 class My_Button{

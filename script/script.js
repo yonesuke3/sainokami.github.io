@@ -17,6 +17,7 @@
     const BTN_WIDTH = 150;
     const ITEM_G_RATE = 95;
     const EFFECT_TIME = 700;
+    const TIMELIMIT = 200;
 
     let item = [];
     let imageArray = [];
@@ -24,6 +25,7 @@
     let text_arr = [];
     let zanzou = [];
     let messageArr = [];
+    let taraiArray = [];
 
     let Elixir_time = new Array(50,30,20);
     let Elixir_flag = new Array('ー','ー','ー');
@@ -62,6 +64,8 @@
     let now_elixir = 0;
     let got_Elixir = 0;
     let surume = 0; 
+    let ti = 0;
+    let tempItem = null;
 
     
     window.addEventListener('load',() => {
@@ -149,6 +153,9 @@
 
         console.log(screen.width);
 
+        //ゲームオーバー確認画面時間の初期化
+        ti = 0;
+
         //titleシーンへ
         if(scene == TITLE){
             Sound_onGame.pause();
@@ -176,7 +183,9 @@
         if(transit == 0){gameOver();}
 
         //アイテムの生成
-        if((myrand(100)+surume) > ITEM_G_RATE){generateItem();}
+        if((myrand(100)+surume) > ITEM_G_RATE){
+            tempItem = generateItem();
+        }
 
         //酒の生成
         if(Elixir_time[now_elixir] == transit){
@@ -269,6 +278,10 @@
             return itm.life>0;
         });
 
+        taraiArray = taraiArray.filter(function(itm){
+            return itm.getY() > 400;
+        });
+
         //Effect配列の整理
         Effect = Effect.filter(function(eff){
             return eff.progress>0;
@@ -338,11 +351,11 @@
 
         if(score >= 8000){
             grade = '厄払いに成功した!!';
-        }else if(score >= 7000){
-            grade = '少しだけ厄が払えた気がする!';
-        }else if(score >= 6000){
-            grade = 'あまり厄は払えなかったようだ';
         }else if(score >= 5000){
+            grade = '少しだけ厄が払えた気がする!';
+        }else if(score >= 4000){
+            grade = 'あまり厄は払えなかったようだ';
+        }else if(score >= 3000){
             grade = '厄が払えなかった';
         }else if(score >= 1){
             grade = 'どうやら厄年になりそうだ…';
@@ -354,6 +367,10 @@
             text_arr.push(new Text_FadeIn(ctx,'結果',40,CANVAS_WIDTH/2-40,CANVAS_HEIGHT/3-50,40,0));
             text_arr.push(new Text_FadeIn(ctx,`${score}点`,50,CANVAS_WIDTH/2-60,CANVAS_HEIGHT/3+40,40,30));
             text_arr.push(new Text_FadeIn(ctx,`${grade}`,20,CANVAS_WIDTH/2-90,CANVAS_HEIGHT/2+10,40,60));
+            if(score>5000){
+                text_arr.push(new Text_FadeIn(ctx,'キーワード：「しんごろう」',20,CANVAS_WIDTH/2-90,CANVAS_HEIGHT/2+40,40,0));
+            }
+
             gameover_text_init = true;
 
             actor.statusInit();
@@ -366,6 +383,7 @@
         ctx.font = '20px serif';
         ctx.fillText('clickかTapでタイトルへ戻る',CANVAS_WIDTH/2-110,CANVAS_HEIGHT/2+170);
         
+        ti++;
         if(over == null){requestAnimationFrame(gameOver);}
         if(scene == TITLE){initialize();}
     }
@@ -392,10 +410,11 @@
     
                     initialize();
                 }else if(scene == GAMEOVER){
-                    console.log('init is called');
-                    
-                    scene = TITLE;
-                    over = 1;
+                    if(ti>TIMELIMIT){
+                        console.log('init is called');
+                        scene = TITLE;
+                        over = 1;
+                    } 
                 }else if(scene == ONGAME){
                     var touchObject = e.changedTouches[0];
                     mouse_X = touchObject.pageX;
@@ -427,10 +446,12 @@
                     scene = ONGAME;
                     initialize();
                 }else if(scene == GAMEOVER){
-                    console.log('init is called');
-                    Sound_onGame.pause();
-                    scene = TITLE;
-                    over = 1;
+                    if(ti>TIMELIMIT){
+                        console.log('init is called');
+                        Sound_onGame.pause();
+                        scene = TITLE;
+                        over = 1;
+                    }    
                 }else if(scene == ONGAME){
                     getPosition(e);
                     console.log(`X=${offset_X}`);
@@ -501,7 +522,12 @@
                 }   
             }
         }
+        itm.setXmodify(taraiArray);
+        if(itm.getScore() != -100){
+            taraiArray[taraiArray.length] = itm;
+        }
         item.push(itm);
+        return(itm);
         
     }
 
